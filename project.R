@@ -2,12 +2,7 @@ rm(list=ls())
 library(ggplot2)
 library(stats)
 library(dplyr)
-if(!require(gapminder))
-{
-  install.packages(gapminder)
-  library(gapminder)
-}
-library(gapminder)
+
 data<-read.csv("C:/Users/user/OneDrive/桌面/StudentsPerformance.csv", header=T, sep=",")
 #View(data)
 #head(data)
