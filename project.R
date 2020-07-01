@@ -1,7 +1,7 @@
 #題目改成 Student Performance analysis
 #資料來源 https://www.kaggle.com/spscientist/students-performance-in-exams
 #共1000筆資料
-#已全部完成
+
 rm(list=ls())
 
 if (!require(ggplot2)) {      #show graph
