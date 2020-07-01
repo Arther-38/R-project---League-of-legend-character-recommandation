@@ -27,12 +27,15 @@ Data<-read.csv("StudentsPerformance.csv", header=T, sep=",")
 
 #資料清洗和重整
 colnames(Data)[2]<-"group" 
-#colnames(Data)
+
+#處理GROUP列的數據,變成(A,B,C,D,E)
 Data$group<-as.character(Data$group)
 group<-strsplit(Data$group," ")
 group<-unlist(group)
 group<-subset(group,group!="group")
 Data$group<-group
+
+#轉換變數屬性
 Data$gender<-as.character(Data$gender)
 Data$parental.level.of.education<-as.character(Data$parental.level.of.education)
 Data$lunch<-as.character(Data$lunch)
@@ -49,134 +52,174 @@ Data<-cbind(Data,sum)
 Data<-Data[order(Data$sum,decreasing = TRUE),]
 
 View(Data)
-reverse(unique(Data$gender))
-
-table(Data$parental.level.of.education)
 
 #男女資料分析
+
 # 1.統計人數
 fcount<-filter(Data,Data$gender=="female")
 mcount<-filter(Data,Data$gender=="male")
 gen<-c("male","female")
 gencount<-c(nrow(mcount),nrow(fcount))
-barplot(gencount,names.arg=gen,col=c("darkblue","red"))
+genderNum<-barplot(gencount,names.arg=gen,col=c("darkblue","red"))
 
-# 2.性別與各科成績分析  
+# 2.性別與各科成績分析(可看每隊)  
 data<-Data
-data$gender[which(data$gender=="female")]<-0
-data$gender[which(data$gender=="male")]<-1
-data$gender<-as.numeric(as.character(data$gender))
-f1<-sum(fcount$writing.score)
-m1<-sum(mcount$writing.score)
-cor(data$gender,data$sum)
-cor(data$gender,data$math.score)
 
-p1<-mcount %>% ggplot( aes(x=rownames(mcount), y=mcount$math.score)) +
-  geom_line() +
-  geom_point()
+gender1<-ggplot(data, aes(x=gender, y=math.score)) + 
+  geom_violin(aes(fill = group),draw_quantiles = c(0.25, 0.5, 0.75))
 
-p2<-fcount  %>% ggplot( aes(x=rownames(fcount), y=fcount$math.score)) +
-  geom_line() +
-  geom_point()
+gender2<-ggplot(data, aes(x=gender, y=reading.score)) + 
+  geom_violin(aes(fill = group),draw_quantiles = c(0.25, 0.5, 0.75))
 
-ggarrange(p1,p2,nrow=1,labels = c("male","female"))
+gender3<-ggplot(data, aes(x=gender, y=writing.score)) + 
+  geom_violin(aes(fill = group),draw_quantiles = c(0.25, 0.5, 0.75))
 
-cor(data$gender,data$reading.score)
-p3<-mcount %>% ggplot( aes(x=rownames(mcount), y=mcount$reading.score)) +
-  geom_line() +
-  geom_point()
+gender4<-ggplot(data, aes(x=gender, y=sum)) + 
+  geom_violin(aes(fill = group),draw_quantiles = c(0.25, 0.5, 0.75))
 
-p4<-fcount  %>% ggplot( aes(x=rownames(fcount), y=fcount$reading.score)) +
-  geom_line() +
-  geom_point()
-ggarrange(p3,p4,nrow=1,labels = c("male","female"))
-
-cor(data$gender,data$writing.score)
-p5<-mcount %>% ggplot( aes(x=rownames(mcount), y=mcount$writing.score)) +
-  geom_line() +
-  geom_point()
-
-p6<-fcount  %>% ggplot( aes(x=rownames(fcount), y=fcount$writing.score)) +
-  geom_line() +
-  geom_point()
-ggarrange(p3,p4,nrow=1,labels = c("male","female"))
-
-cor(data$gender,data$sum)
-
-p7<-mcount %>% ggplot( aes(x=rownames(mcount), y=mcount$sum)) +
-  geom_line() +
-  geom_point()
-
-p8<-fcount  %>% ggplot( aes(x=rownames(fcount), y=fcount$sum)) +
-  geom_line() +
-  geom_point()
-ggarrange(p7,p8,nrow=1,labels = c("male","female"))
+gender_all<-ggarrange(gender1,gender2,gender3,gender4,nrow=2,ncol=2,labels = c("math.score","reading.score","writing.score","sum.score"))
 
 #小隊資料分析
 
-#1.分析小隊學歷
+#1.分析小隊 (1.每隊學歷 2.每隊吃午餐紀錄 3.每隊準備考試紀錄)
+
+#groupA
 groupA<-filter(data,data$group=="A")
 tableA<-table(groupA$parental.level.of.education)
-tableA1<-table(groupA$sum)
 tableA<-as.data.frame(tableA)
-tableA1<-as.data.frame(tableA1)
+
+# 1.(bar chart)
+groupA1<-ggplot(tableA,aes(x=Var1,y=Freq))+
+  geom_bar(stat="identity",aes(fill=Var1))
+
+# 2.(pie chart)
+groupA2<-ggplot(groupA,aes(fill=lunch,y=lunch,x=""))+
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)
+
+# 3.(pie chart)
+groupA3<-ggplot(groupA,aes(fill=test.preparation.course,y=test.preparation.course,x=""))+
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)
+  
+#groupB
 groupB<-filter(data,data$group=="B")
 tableB<-table(groupB$parental.level.of.education)
-tableB1<-table(groupB$sum)
 tableB<-as.data.frame(tableB)
-tableB1<-as.data.frame(tableB1)
+
+groupB1<-ggplot(tableB,aes(x=Var1,y=Freq))+
+  geom_bar(stat="identity",aes(fill=Var1))
+
+groupB2<-ggplot(groupB,aes(fill=lunch,y=lunch,x=""))+
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)
+
+groupB3<-ggplot(groupB,aes(fill=test.preparation.course,y=test.preparation.course,x=""))+
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)
+
+#groupC
 groupC<-filter(data,data$group=="C")
 tableC<-table(groupC$parental.level.of.education)
-tableC1<-table(groupC$sum)
 tableC<-as.data.frame(tableC)
-tableC1<-as.data.frame(tableC1)
+groupC1<-ggplot(tableC,aes(x=Var1,y=Freq))+
+  geom_bar(stat="identity",aes(fill=Var1))
+
+groupC2<-ggplot(groupC,aes(fill=lunch,y=lunch,x=""))+
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)
+
+groupC3<-ggplot(groupC,aes(fill=test.preparation.course,y=test.preparation.course,x=""))+
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)
+
+#groupD
 groupD<-filter(data,data$group=="D")
 tableD<-table(groupD$parental.level.of.education)
-tableD1<-table(groupD$sum)
 tableD<-as.data.frame(tableD)
-tableD1<-as.data.frame(tableD1)
+groupD1<-ggplot(tableD,aes(x=Var1,y=Freq))+
+  geom_bar(stat="identity",aes(fill=Var1))
+
+groupD2<-ggplot(groupD,aes(fill=lunch,y=lunch,x=""))+
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)
+
+groupD3<-ggplot(groupD,aes(fill=test.preparation.course,y=test.preparation.course,x=""))+
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)
+
+##groupE
 groupE<-filter(data,data$group=="E")
 tableE<-table(groupE$parental.level.of.education)
-tableE1<-table(groupE$sum)
 tableE<-as.data.frame(tableE)
-tableE1<-as.data.frame(tableE1)
 
-#分析小隊成績
-p1<-ggplot(tableA, aes(x=unique(data$parental.level.of.education), y=Freq)) + 
-  geom_bar(stat = "identity", fill=c("red","blue","yellow","green","purple","orange") )
-p2<-ggplot(tableB, aes(x=unique(data$parental.level.of.education), y=Freq)) + 
-  geom_bar(stat = "identity", fill=c("red","blue","yellow","green","purple","orange") )
-p3<-ggplot(tableC, aes(x=unique(data$parental.level.of.education), y=Freq)) + 
-  geom_bar(stat = "identity", fill=c("red","blue","yellow","green","purple","orange") )
-p4<-ggplot(tableD, aes(x=unique(data$parental.level.of.education), y=Freq)) + 
-  geom_bar(stat = "identity", fill=c("red","blue","yellow","green","purple","orange") )
-p5<-ggplot(tableE, aes(x=unique(data$parental.level.of.education), y=Freq)) + 
-  geom_bar(stat = "identity", fill=c("red","blue","yellow","green","purple","orange") )
-p6<-tableA1 %>% ggplot( aes(x=rownames(tableA1), y=tableA1$Var1)) +
-  geom_line() +
-  geom_point()
-p7<-tableB1 %>% ggplot( aes(x=rownames(tableB1), y=tableB1$Var1)) +
-  geom_line() +
-  geom_point()
-p8<-tableC1 %>% ggplot( aes(x=rownames(tableC1), y=tableC1$Var1)) +
-  geom_line() +
-  geom_point()
-p9<-tableD1 %>% ggplot( aes(x=rownames(tableD1), y=tableD1$Var1)) +
-  geom_line() +
-  geom_point()
-p10<-tableE1 %>% ggplot( aes(x=rownames(tableE1), y=tableE1$Var1)) +
-  geom_line() +
-  geom_point()
+groupE1<-ggplot(tableE,aes(x=Var1,y=Freq))+
+  geom_bar(stat="identity",aes(fill=Var1))
 
-ggarrange(p6,p7,p8,p9,p10,nrow=1,labels=c("A","B","C","D","E"))
+groupE2<-ggplot(groupE,aes(fill=lunch,y=lunch,x=""))+
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)
 
-#學歷與成績的關係
+groupE3<-ggplot(groupE,aes(fill=test.preparation.course,y=test.preparation.course,x=""))+
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0)
+
+#以上各小隊資料結合圖
+GOURP_ALL<-ggarrange(groupA1,groupA2,groupA3,groupB1,groupB2,groupB3,groupC1,groupC2,groupC3,groupD1,groupD2,groupD3,groupE1,groupE2,groupE3,ncol=3,nrow=5)
+
+# 2.分析小隊成績(使用violin chart)
+
+# math.score performance of each team
+group_math<-ggplot(data, aes(x=group, y=math.score)) + 
+  geom_violin(aes(fill = group),draw_quantiles = c(0.25, 0.5, 0.75))
+
+# writing.score performance of each team
+grouop_writing<-ggplot(data, aes(x=group, y=writing.score)) + 
+  geom_violin(aes(fill = group),draw_quantiles = c(0.25, 0.5, 0.75))
+
+#reading.score performance of each team
+group_reading<-ggplot(data, aes(x=group, y=reading.score)) + 
+  geom_violin(aes(fill = group),draw_quantiles = c(0.25, 0.5, 0.75))
+
+## score sum performance of each team
+group_sum<-ggplot(data, aes(x=group, y=sum)) + 
+  geom_violin(aes(fill = group),draw_quantiles = c(0.25, 0.5, 0.75))
+
+#小隊成績結合圖
+# Please zoom the picture p5 !!
+group_all<-ggarrange(group_math,grouop_writing,group_reading,group_sum,nrow=2,ncol=2,labels=c("math","writing","reading","sum"))
+
+#學歷與成績的關係 (使用box chart)
+# -> 篩選最佳狀態下的學生: prepare=completed, lunch=standard
+
+level<-filter(Data,Data$lunch=="standard",Data$test.preparation.course=="completed")
+
+level_score<-ggplot(level, aes(x=parental.level.of.education, y=sum)) + 
+  geom_boxplot(fill="slateblue", alpha=0.5) +    # set color
+  xlab("level")
 
 
-#考試準備程度與成績結果分析
+#考試準備程度與成績結果分析(使用box chart)
+# -> 篩選最佳狀態下的學生: lunch=standard
+prepare<-filter(Data,Data$lunch=="standard")
 
+prepare_score<-ggplot(prepare, aes(x=test.preparation.course, y=sum)) + 
+  geom_boxplot(fill="slateblue", alpha=0.5) +    # set color
+  xlab("prepared")
 
-#午餐與成績結果相關分析
+#午餐與成績結果相關分析 (使用box chart)
+# -> 篩選最佳狀態下的學生: prepare=completed
+Lunch<-filter(Data,Data$test.preparation.course=="completed")
+lunch_score<-ggplot(Lunch, aes(x=lunch, y=sum)) + 
+  geom_boxplot(fill="slateblue", alpha=0.5) +    #set color
+  xlab("lunch")
 
+#以上三個屬性結合圖
+attributes_all<-ggarrange(level_score,prepare_score,lunch_score,nrow=2,ncol=2,labels=c("math","writing","reading","sum"))
 
-
+#在此可查看全部圖表
+genderNum
+gender_all
+GOURP_ALL
+group_all
+attributes_all
